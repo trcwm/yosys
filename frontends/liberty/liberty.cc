@@ -538,6 +538,8 @@ struct LibertyFrontend : public Frontend {
 		LibertyParser parser(*f);
 		int cell_count = 0;
 
+		//parser.ast->dump(stdout);
+
 		std::map<std::string, std::tuple<int, int, bool>> global_type_map;
 		parse_type_map(global_type_map, parser.ast);
 
@@ -577,7 +579,7 @@ struct LibertyFrontend : public Frontend {
 
 			for (auto node : cell->children)
 			{
-				if (node->id == "pin" && node->args.size() == 1) {
+				if (node->id == "pin" && node->args.size() > 0) {
 					LibertyAst *dir = node->find("direction");
 					if (!dir || (dir->value != "input" && dir->value != "output" && dir->value != "inout" && dir->value != "internal"))
 					{
@@ -590,8 +592,10 @@ struct LibertyFrontend : public Frontend {
 							goto skip_cell;
 						}
 					}
-					if (!flag_lib || dir->value != "internal")
-						module->addWire(RTLIL::escape_id(node->args.at(0)));
+					for(auto pinName : node->args) {
+						if (!flag_lib || dir->value != "internal")
+							module->addWire(RTLIL::escape_id(pinName));
+					}
 				}
 
 				if (node->id == "bus" && node->args.size() == 1)
